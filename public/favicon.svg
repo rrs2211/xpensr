@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0f1c09"/>
+  <polygon points="32,10 44,17 44,31 32,38 20,31 20,17" fill="none" stroke="#7ED957" stroke-width="2"/>
+  <polygon points="32,14 42,20 42,30 32,36 22,30 22,20" fill="#7ED957" opacity="0.15"/>
+  <line x1="32" y1="24" x2="32" y2="10" stroke="#7ED957" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="44" y2="17" stroke="#7ED957" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="44" y2="31" stroke="#7ED957" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="32" y2="38" stroke="#7ED957" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="20" y2="31" stroke="#7ED957" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="20" y2="17" stroke="#7ED957" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="32" cy="24" r="4" fill="#7ED957"/>
+  <circle cx="32" cy="24" r="2" fill="#0f1c09"/>
+  <text x="32" y="55" font-family="sans-serif" font-size="9" font-weight="bold" fill="#7ED957" text-anchor="middle">HUB</text>
+</svg>
