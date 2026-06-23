@@ -694,7 +694,7 @@ const saveSess=s=>{try{if(!s){localStorage.removeItem(SESSION_KEY);return;}local
 
 const DB0={
   rbshah:{
-    meta:{id:"rbshah",name:"R B Shah & Associates",industry:"CA Firm",plan:"Pro",maxUsers:20,status:"Active",createdOn:"2026-01-15"},
+    meta:{id:"rbshah",name:"RB Finsol Private Limited",industry:"CA Firm",plan:"Pro",maxUsers:20,status:"Active",createdOn:"2026-01-15"},
     users:[
       {id:"mgr1",cid:"rbshah",name:"Demo Manager",  email:"manager@demo.local",  password:"",role:"manager", avatar:"DM",dept:"Management",balance:0,    reimbursable:0,delegateTo:null},
       {id:"emp1",cid:"rbshah",name:"Demo Employee 1",email:"emp1@demo.local",     password:"",role:"employee",avatar:"D1",dept:"Audit",      balance:25000,reimbursable:0,delegateTo:null},
@@ -1441,6 +1441,21 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
 
   const inp={width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid rgba(255,255,255,0.25)",background:"rgba(255,255,255,0.08)",color:"#ffffff",fontFamily:FB,fontSize:14,outline:"none",boxSizing:"border-box",WebkitTextFillColor:"#ffffff"};
 
+  // ── Dynamic landing content from Supabase ────────────────────────────────
+  const[lc,setLc]=useState(null); // null = loading, {} = loaded
+  useEffect(()=>{
+    if(!SB_ENABLED){setLc({});return;}
+    supabase.from("landing_content").select("slot,content").eq("is_active",true)
+      .then(({data})=>{
+        if(!data){setLc({});return;}
+        const map={};
+        data.forEach(r=>{map[r.slot]=r.content;});
+        setLc(map);
+      }).catch(()=>setLc({}));
+  },[]);
+  // Helper: get content for a slot, with fallback
+  const lget=(slot,fallback)=>lc?.[slot]??fallback;
+
   const[showLogin,setShowLogin]=useState(isPasswordRecovery||false);
   const[authMode,setAuthMode]=useState("login"); // "login" | "signup"
   const[suForm,setSuForm]=useState({companyName:"",adminName:"",adminEmail:"",adminPassword:"",confirmPassword:"",industry:""});
@@ -1531,6 +1546,16 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
         </div>
       </nav>
 
+      {/* ── ANNOUNCEMENT BANNER (dynamic, admin-controlled) ── */}
+      {lget("announcement",{}).enabled&&lget("announcement",{}).text&&(
+        <div style={{background:lget("announcement",{}).bg||"#fef9c3",borderBottom:`1px solid ${lget("announcement",{}).color||"#854d0e"}33`,padding:"10px max(24px,5vw)",textAlign:"center"}}>
+          <span style={{fontWeight:700,fontSize:13,color:lget("announcement",{}).color||"#854d0e"}}>
+            {lget("announcement",{}).badge&&<span style={{background:lget("announcement",{}).color||"#854d0e",color:"#fff",borderRadius:10,padding:"2px 9px",fontSize:10,fontWeight:700,marginRight:8}}>{lget("announcement",{}).badge}</span>}
+            {lget("announcement",{}).text}
+          </span>
+        </div>
+      )}
+
       {/* ── HERO ── */}
       <section style={{background:"linear-gradient(135deg,#e8f8ff 0%,#f0ffe8 50%,#e0f0ff 100%)",padding:"80px max(24px,5vw) 70px",textAlign:"center",position:"relative",overflow:"hidden"}} className="xr-anim">
         {/* Blue wave top-left */}
@@ -1546,13 +1571,15 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
           {Array(20).fill(0).map((_,i)=><div key={i} style={{width:4,height:4,borderRadius:"50%",background:"#5CB83A"}}/>)}
         </div>
         <div style={{position:"relative",zIndex:1}}>
-        <div style={{display:"inline-block",background:"#f0fde9",border:"1px solid #bbf7d0",borderRadius:20,padding:"5px 14px",fontSize:11,fontWeight:700,color:"#16a34a",letterSpacing:1,textTransform:"uppercase",marginBottom:20}}>🚀 Now in Beta — Limited Access</div>
+        <div style={{display:"inline-block",background:"#f0fde9",border:"1px solid #bbf7d0",borderRadius:20,padding:"5px 14px",fontSize:11,fontWeight:700,color:"#16a34a",letterSpacing:1,textTransform:"uppercase",marginBottom:20}}>
+          {lget("hero",{}).badge||"🚀 Now in Beta — Limited Access"}
+        </div>
         <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(36px,6vw,68px)",fontWeight:800,color:"#0f1c09",lineHeight:1.1,marginBottom:20,letterSpacing:-1}}>
-          Expense Management<br/><span style={{background:"linear-gradient(135deg,#2563eb,#5CB83A)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Built for Growing Teams</span>
+          {lget("hero",{}).headline1||"Expense Management"}<br/><span style={{background:"linear-gradient(135deg,#2563eb,#5CB83A)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{lget("hero",{}).headline2||"Built for Growing Teams"}</span>
         </h1>
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(18px,2.5vw,24px)",fontWeight:700,color:"#1e3a5f",letterSpacing:.5,marginBottom:8,marginTop:-8}}>Scan. Send. Settled.</p>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(18px,2.5vw,24px)",fontWeight:700,color:"#1e3a5f",letterSpacing:.5,marginBottom:8,marginTop:-8}}>{lget("hero",{}).tagline||"Scan. Send. Settled."}</p>
         <p style={{fontSize:"clamp(15px,2vw,17px)",color:"#374151",lineHeight:1.7,maxWidth:560,margin:"0 auto 36px",fontWeight:400}}>
-          AI-powered claim submission, smart approval workflows, real-time balances and settlement tracking — all in one beautifully simple app.
+          {lget("hero",{}).subtext||"AI-powered claim submission, smart approval workflows, real-time balances and settlement tracking — all in one beautifully simple app."}
         </p>
         <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
           <button onClick={()=>{setAuthMode("signup");setShowLogin(true);}} className="xr-btn" style={{background:"#5CB83A",color:"#fff",border:"none",borderRadius:12,padding:"14px 32px",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:FB}}>
@@ -1564,7 +1591,7 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
         </div>
         {/* Stats bar */}
         <div style={{display:"flex",gap:32,justifyContent:"center",marginTop:52,flexWrap:"wrap"}}>
-          {[["AI OCR","Invoice scanning"],["24hr","Edit windows"],["4 Roles","Admin, Manager, Finance, Employee"],["Real-time","Balances & settlements"]].map(([stat,desc])=>(
+          {(lget("stats",[["AI OCR","Invoice scanning"],["24hr","Edit windows"],["4 Roles","Admin, Manager, Finance, Employee"],["Real-time","Balances & settlements"]].map(([stat,desc])=>({stat,desc})))).map(({stat,desc})=>(
             <div key={stat} style={{textAlign:"center"}}>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:800,color:"#0f1c09"}}>{stat}</div>
               <div style={{fontSize:11,color:"#374151",marginTop:2}}>{desc}</div>
@@ -1581,7 +1608,7 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
             <p style={{color:"#374151",fontSize:16,maxWidth:520,margin:"0 auto"}}>From submission to settlement, XpensR covers the complete expense lifecycle.</p>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20}}>
-            {features.map(({icon,title,desc})=>(
+            {(lget("features",features)).map(({icon,title,desc})=>(
               <div key={title} className="xr-card xr-feat" style={{padding:"24px 22px",borderRadius:14,border:"1.5px solid #dbeafe",background:"linear-gradient(135deg,#fafff8,#f0f9ff)",cursor:"default"}}>
                 <div style={{fontSize:32,marginBottom:12}}>{icon}</div>
                 <div style={{fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:700,color:"#0f1c09",marginBottom:6}}>{title}</div>
@@ -1598,6 +1625,14 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
           <div style={{textAlign:"center",marginBottom:44}}>
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(26px,4vw,40px)",fontWeight:800,color:"#0f1c09",marginBottom:10}}>Simple, transparent pricing</h2>
             <p style={{color:"#374151",fontSize:16}}>Pay per user. Cancel anytime. All plans include core features.</p>
+            {/* Dynamic pricing promo note */}
+            {lget("pricing_note",{}).enabled&&lget("pricing_note",{}).text&&(
+              <div style={{marginTop:16,display:"inline-block",background:lget("pricing_note",{}).highlight_color||"#7ED957",borderRadius:12,padding:"10px 22px"}}>
+                {lget("pricing_note",{}).discount_badge&&<span style={{background:"#fff",color:"#0f1c09",borderRadius:8,padding:"2px 10px",fontSize:11,fontWeight:800,marginRight:10}}>{lget("pricing_note",{}).discount_badge}</span>}
+                <span style={{fontWeight:700,fontSize:14,color:"#0f1c09"}}>{lget("pricing_note",{}).text}</span>
+                {lget("pricing_note",{}).valid_till&&<span style={{fontSize:11,color:"#0f1c09",opacity:.7,marginLeft:8}}>Valid till {lget("pricing_note",{}).valid_till}</span>}
+              </div>
+            )}
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:18}}>
             {tiers.map(t=>(
@@ -1677,7 +1712,7 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:800,color:"#0f1c09",marginBottom:8}}>Contact Us</h2>
             <p style={{color:"#374151",fontSize:14,marginBottom:28,lineHeight:1.6}}>We'd love to hear from you. Reach out anytime.</p>
             {[
-              {icon:"🏢",label:"R B Shah & Associates",sub:"Chartered Accountants"},
+              {icon:"🏢",label:"RB Finsol Private Limited",sub:"Chartered Accountants & Financial Advisory"},
               {icon:"📍",label:"Rajkot, Gujarat, India",sub:""},
               {icon:"📧",label:"rushabh@rbshah.co.in",sub:"Rushabh Shah, CA · Partner"},
               {icon:"🌐",label:"www.rbshah.co.in",sub:""},
@@ -1699,9 +1734,9 @@ function Login({onLogin,DB,isPasswordRecovery=false}){
       <footer style={{background:"#0f1c09",padding:"32px max(24px,5vw)",textAlign:"center"}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:800,color:"#7ED957",marginBottom:4}}>XpensR</div>
         <div style={{fontSize:10,color:"rgba(255,255,255,.3)",letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>by RB</div>
-        <p style={{color:"rgba(255,255,255,.3)",fontSize:12,marginBottom:4}}>© 2026 R B Shah & Associates. Built with ♥ in Rajkot.</p>
-        <p style={{color:"rgba(255,255,255,.2)",fontSize:11}}>XpensR is a product of RB Finsol. All rights reserved.</p>
-        <p style={{color:"rgba(255,255,255,.15)",fontSize:10,marginTop:10,letterSpacing:.5}}>Last updated: 22 Jun 2026, 14:30 IST</p>
+        <p style={{color:"rgba(255,255,255,.3)",fontSize:12,marginBottom:4}}>© 2026 RB Finsol Private Limited. Built with ♥ in Rajkot.</p>
+        <p style={{color:"rgba(255,255,255,.2)",fontSize:11}}>XpensR is a product of RB Finsol Private Limited. All rights reserved.</p>
+        <p style={{color:"rgba(255,255,255,.15)",fontSize:10,marginTop:10,letterSpacing:.5}}>Last updated: 23 Jun 2026, 15:20 IST</p>
       </footer>
 
       {showLogin&&(
@@ -1843,6 +1878,128 @@ function EditCoModal({data,onClose,onSave}){
 }
 
 // ─── SUPER ADMIN ──────────────────────────────────────────────────────────────
+// ─── LANDING PAGE EDITOR ──────────────────────────────────────────────────────
+function LandingEditor(){
+  const[slots,setSlots]=useState(null);
+  const[saving,setSaving]=useState({});
+  const[saved,setSaved]=useState({});
+  const[err,setErr]=useState({});
+
+  useEffect(()=>{
+    if(!SB_ENABLED){setSlots({});return;}
+    supabase.from("landing_content").select("*").order("slot")
+      .then(({data})=>{
+        if(!data){setSlots({});return;}
+        const m={};data.forEach(r=>{m[r.slot]=r;});
+        setSlots(m);
+      }).catch(()=>setSlots({}));
+  },[]);
+
+  const save=async(slot,content,isActive)=>{
+    setSaving(p=>({...p,[slot]:true}));setErr(p=>({...p,[slot]:""}));
+    try{
+      const{error}=await supabase.from("landing_content").upsert({slot,content,is_active:isActive??true,updated_at:new Date().toISOString(),updated_by:"superadmin"});
+      if(error)throw new Error(error.message);
+      setSlots(p=>({...p,[slot]:{...p?.[slot],slot,content,is_active:isActive??true}}));
+      setSaved(p=>({...p,[slot]:true}));
+      setTimeout(()=>setSaved(p=>({...p,[slot]:false})),2500);
+    }catch(e){setErr(p=>({...p,[slot]:e.message}));}
+    finally{setSaving(p=>({...p,[slot]:false}));}
+  };
+
+  if(!slots)return<div style={{padding:40,textAlign:"center",color:MUTED}}>Loading landing content…</div>;
+
+  const S=({slot})=>{
+    const row=slots[slot]||{slot,content:{},is_active:true};
+    const[draft,setDraft]=useState(()=>JSON.stringify(row.content||{},null,2));
+    const[active,setActive]=useState(row.is_active!==false);
+    const[jsonErr,setJsonErr]=useState("");
+
+    const validate=(val)=>{
+      try{JSON.parse(val);setJsonErr("");return true;}
+      catch(e){setJsonErr("Invalid JSON: "+e.message);return false;}
+    };
+
+    return(
+      <div style={{marginBottom:20,borderRadius:12,border:`1px solid ${BDR}`,overflow:"hidden"}}>
+        <div style={{background:GL,padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${BDR}`}}>
+          <div style={{fontWeight:700,fontSize:13,color:GD}}>{slot}</div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:MUTED,cursor:"pointer"}}>
+              <input type="checkbox" checked={active} onChange={e=>setActive(e.target.checked)} style={{accentColor:GD}}/> Active
+            </label>
+            <button onClick={()=>{if(!validate(draft))return;try{save(slot,JSON.parse(draft),active);}catch{}}}
+              disabled={saving[slot]}
+              style={{padding:"5px 16px",background:saved[slot]?"#16a34a":GD,color:"#fff",border:"none",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer"}}>
+              {saving[slot]?"Saving…":saved[slot]?"✓ Saved":"Save"}
+            </button>
+          </div>
+        </div>
+        <div style={{padding:14}}>
+          <textarea
+            value={draft}
+            onChange={e=>{setDraft(e.target.value);validate(e.target.value);}}
+            rows={Math.min(20,draft.split("\n").length+2)}
+            style={{width:"100%",fontFamily:"monospace",fontSize:12,padding:10,border:`1.5px solid ${jsonErr?"#ef4444":BDR}`,borderRadius:8,resize:"vertical",outline:"none",color:INK,background:"#fafff8",boxSizing:"border-box"}}
+          />
+          {jsonErr&&<div style={{color:"#dc2626",fontSize:11,marginTop:4}}>{jsonErr}</div>}
+          {err[slot]&&<div style={{color:"#dc2626",fontSize:11,marginTop:4}}>{err[slot]}</div>}
+        </div>
+      </div>
+    );
+  };
+
+  return(
+    <div>
+      <div style={{background:"#fffbeb",border:"1px solid #fcd34d",borderRadius:10,padding:"12px 16px",marginBottom:20,fontSize:13,color:"#92400e"}}>
+        <b>🌐 Landing Page Editor</b> — Changes go live on xpensr.in immediately after saving. Edit JSON values only; do not change the key names. Toggle "Active" to show/hide a section. Refresh the public site after saving to see changes.
+      </div>
+
+      {/* Quick-action: Announcement Banner */}
+      <div style={{background:"#f0fde9",border:"1px solid #bbf7d0",borderRadius:12,padding:16,marginBottom:20}}>
+        <div style={{fontWeight:700,fontSize:13,color:GD,marginBottom:10}}>⚡ Quick Actions</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <button onClick={async()=>{
+            const text=window.prompt("Announcement text (leave blank to disable):");
+            if(text===null)return;
+            const badge=text?window.prompt("Badge label (e.g. OFFER, NEW, LIMITED — optional):",""):"";
+            const content={enabled:!!text,type:"promo",text:text||"",badge:badge||"",bg:"#fef9c3",color:"#854d0e"};
+            await save("announcement",content,true);
+            alert(text?"✓ Announcement live!":"✓ Announcement hidden.");
+          }} style={{padding:"9px 16px",background:"#f59e0b",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            📣 Set Announcement Banner
+          </button>
+          <button onClick={async()=>{
+            const text=window.prompt("Pricing promo text (e.g. 'Launch offer — 30% off all plans'):");
+            if(text===null)return;
+            const badge=window.prompt("Discount badge (e.g. 30% OFF):","");
+            const till=window.prompt("Valid till (e.g. 31 Jul 2026 — optional):","");
+            const content={enabled:!!text,text:text||"",discount_badge:badge||"",valid_till:till||"",highlight_color:"#7ED957"};
+            await save("pricing_note",content,true);
+            alert(text?"✓ Pricing promo live!":"✓ Pricing promo hidden.");
+          }} style={{padding:"9px 16px",background:"#7ED957",color:"#0f1c09",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            🏷 Set Pricing Promo
+          </button>
+          <button onClick={async()=>{
+            await save("announcement",{enabled:false,type:"promo",text:"",badge:"",bg:"#fef9c3",color:"#854d0e"},true);
+            await save("pricing_note",{enabled:false,text:"",discount_badge:"",valid_till:"",highlight_color:"#7ED957"},true);
+            alert("✓ All promos cleared.");
+          }} style={{padding:"9px 16px",background:"#ef4444",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            🗑 Clear All Promos
+          </button>
+          <button onClick={()=>{window.open("https://xpensr.in","_blank");}}
+            style={{padding:"9px 16px",background:"#2563eb",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            👁 Preview Live Site
+          </button>
+        </div>
+      </div>
+
+      <div style={{fontWeight:700,fontSize:13,color:MUTED,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>All Content Slots</div>
+      {["announcement","hero","stats","features","pricing_note","footer_note"].map(slot=><S key={slot} slot={slot}/>)}
+    </div>
+  );
+}
+
 function SuperAdmin({DB,setDB,onLogout,sbRefresh}){
   const[tab,setTab]=useState("companies");
   const[notif,setNtf]=useState(null);
@@ -1938,6 +2095,7 @@ function SuperAdmin({DB,setDB,onLogout,sbRefresh}){
         {[
           {id:"companies",i:"🏢",l:"Companies"},
           {id:"users",i:"👥",l:"Users & Passwords"},
+          {id:"landing",i:"🌐",l:"Landing Page"},
           {id:"help",i:"❓",l:"Help"}
         ].map(x=>(
           <button key={x.id} onClick={()=>setTab(x.id)} style={{display:"flex",alignItems:"center",gap:9,padding:"10px 12px",borderRadius:9,cursor:"pointer",border:"none",fontFamily:FB,fontSize:13,fontWeight:tab===x.id?600:400,background:tab===x.id?"#dc2626":"transparent",color:tab===x.id?"#fff":"rgba(255,255,255,0.5)",marginBottom:3,textAlign:"left",width:"100%"}}>
@@ -2013,6 +2171,7 @@ function SuperAdmin({DB,setDB,onLogout,sbRefresh}){
           );})}</tbody>
         </table></Card>}
         {tab==="users"&&<SaUsers DB={DB} userCounts={userCounts}/>}
+        {tab==="landing"&&<LandingEditor/>}
         {tab==="help"&&<HelpManual userRole="superadmin" onClose={()=>setTab("companies")} inline={true}/>}
       </div>
       {/* Create Company Modal */}
